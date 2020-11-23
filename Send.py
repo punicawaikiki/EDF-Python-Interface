@@ -4,7 +4,7 @@ import struct
 from time import sleep
 
 def float_to_hex(f):
-    return hex(struct.unpack('<Q', struct.pack('<d', f))[0])
+    return hex(struct.unpack('<q', struct.pack('<d', f))[0])
 
 # Get x values of the sine wave
 
@@ -21,20 +21,26 @@ Ts = 1/fs
 
 print(f"UDP target IP: {UDP_IP}")
 print(f"UDP target Port: {UDP_PORT}")
-message = b"TEST"
 
-
-i = 0
 while(True):
+    i = 0;
+    test = 1.4
     x = np.arange(fs)
     packet_size = np.arange(4)
     y =[ amp*np.sin(2*np.pi*f * (i/fs)) for i in x]
-    hex_array = [float_to_hex(float(x)) for x in y]
-    string_array = ','.join(hex_array)
     sock = socket.socket(socket.AF_INET,
-                        socket.SOCK_DGRAM) #UDP
-    sock.sendto(string_array.encode(), (UDP_IP, UDP_PORT))
-    sock.sendto(message, (UDP_IP, UDP_PORT))
-    print(f"Message send: Nr.{i}")
-    i = i + 1
+                    socket.SOCK_DGRAM) #UDP
+    for value in x:
+        sample_struct = struct.pack('!fff', float(i), float(x[i]), float(y[i]))
+        sock.sendto(sample_struct, (UDP_IP, UDP_PORT))
+        # test_pack = struct.pack('!f', test)
+        # print(test)
+        # print(test_pack)
+        # sock.sendto(test_pack, (UDP_IP, UDP_PORT))
+        print(i)
+        print(sample_struct)
+        print(struct.unpack('>fff', sample_struct))
+        # print(f"Message send: Nr.{i} with: {i}, {x[i]}, {y[i]}")
+        i += 1
+        sleep(1)
     sleep(1)

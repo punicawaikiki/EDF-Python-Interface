@@ -14,8 +14,8 @@ UDP_IP = "192.168.1.5"
 UDP_PORT = 55556
 # Your Parameters
 amp = 1         # 1V        (Amplitude)
-f = 1        # 1Hz      (Frequency)
-fs = 64     # 64Hz    (Sample Rate)
+f = 2.5        # 1Hz      (Frequency)
+fs = 10     # 64Hz    (Sample Rate)
 T = 1/f
 Ts = 1/fs
 
@@ -23,24 +23,12 @@ print(f"UDP target IP: {UDP_IP}")
 print(f"UDP target Port: {UDP_PORT}")
 
 while(True):
-    i = 0;
-    test = 1.4
     x = np.arange(fs)
-    packet_size = np.arange(4)
     y =[ amp*np.sin(2*np.pi*f * (i/fs)) for i in x]
     sock = socket.socket(socket.AF_INET,
                     socket.SOCK_DGRAM) #UDP
-    for value in x:
-        sample_struct = struct.pack('!fff', float(i), float(x[i]), float(y[i]))
-        sock.sendto(sample_struct, (UDP_IP, UDP_PORT))
-        # test_pack = struct.pack('!f', test)
-        # print(test)
-        # print(test_pack)
-        # sock.sendto(test_pack, (UDP_IP, UDP_PORT))
-        print(i)
-        print(sample_struct)
-        print(struct.unpack('>fff', sample_struct))
-        # print(f"Message send: Nr.{i} with: {i}, {x[i]}, {y[i]}")
-        i += 1
-        sleep(1)
+    sample_struct = struct.pack('10d 10d 10d', *x, *x, *y)
+    sock.sendto(sample_struct, (UDP_IP, UDP_PORT))
+    print(sample_struct)
+    print(struct.unpack('10d 10d 10d', sample_struct))
     sleep(1)

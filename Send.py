@@ -46,10 +46,16 @@ signal1Frequency     = 4
 time        = np.arange(beginTime, endTime, samplingInterval)
 
  
+N_samples = 1024
+amp = 1
+t = np.arange(N_samples)
 
 # Create two sine waves
-
-amplitude1 = np.sin(2*np.pi*signal1Frequency*time)
+amplitude1 = amp * np.sin(2 * np.pi * 50 * t / N_samples)
+amplitude2 = amp * np.sin(2 * np.pi * 100 * t / N_samples)
+amplitude3 = amp * np.sin(2 * np.pi * 15 * t / N_samples)
+amplitude = amplitude1 + amplitude2 + amplitude3
+# amplitude1 = np.sin(2*np.pi*signal1Frequency*time)
 
 # amplitude2 = np.sin(2*np.pi*signal2Frequency*time)
 
@@ -77,7 +83,7 @@ amplitude1 = np.sin(2*np.pi*signal1Frequency*time)
 UDP_IP = "192.168.1.5"
 UDP_PORT = 55556
 cnt = 0
-epoch_amplitude1 = np.array_split(amplitude1, 16)
+epoch_amplitude = np.array_split(amplitude, 16)
 epoch_time = np.array_split(time, 16)
 
 # # Create subplot
@@ -118,7 +124,7 @@ while(True):
     for messageNumber in range(0, int(len(time) / udp_struct_size)):
         sock = socket.socket(socket.AF_INET,
                         socket.SOCK_DGRAM) #UDP
-        sample_struct = struct.pack('1i 64d 64d', messageNumber, *epoch_time[messageNumber], *epoch_amplitude1[messageNumber])
+        sample_struct = struct.pack('1i 64d 64d', messageNumber, *epoch_time[messageNumber], *epoch_amplitude[messageNumber])
         sock.sendto(sample_struct, (UDP_IP, UDP_PORT))
         print(struct.unpack('1i 64d 64d', sample_struct))
         cnt += 1

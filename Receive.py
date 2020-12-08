@@ -18,6 +18,7 @@ sock.bind((UDP_IP, UDP_PORT))
 cnt = 0
 while True:
     data, addr = sock.recvfrom(1512) # buffer size
+    test = struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)
     receivedPacketNumber = int (struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)[0])
     receivedStruct = struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)[1:SAMPLE_ARRAY_SIZE + 1]
     for sample in range(SAMPLE_ARRAY_SIZE):
@@ -28,6 +29,9 @@ while True:
     packetNumberArray[receivedPacketNumber] = 1
     if (np.count_nonzero(packetNumberArray) == FFT_EPOCHES):
         print(f'Array number: {cnt}')
+        for i, item in enumerate(dataArray):
+            if dataArray[i] > 1:
+                print(f'frequency: {dataArray[i]}')
 
         # Create subplot
         figure, axis = plotter.subplots(2, 1)
@@ -38,7 +42,7 @@ while True:
 
         timePeriod  = tpCount/samplingFrequency
 
-        frequencies = values/timePeriod
+        frequencies = values
         # Frequency domain representation
         axis[0].set_title('Fourier transform depicting the frequency components')
         axis[0].plot(frequencies, dataArray)
@@ -48,4 +52,4 @@ while True:
 
 
         plotter.show()
-        cnt+=1
+        # cnt+=1

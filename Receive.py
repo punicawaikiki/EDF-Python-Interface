@@ -31,7 +31,7 @@ while True:
         print(f'Array number: {cnt}')
         for i, item in enumerate(dataArray):
             if dataArray[i] > 1:
-                print(f'frequency: {dataArray[i]}')
+                print(f'frequency: {i}')
 
         # Create subplot
         figure, axis = plotter.subplots(2, 1)

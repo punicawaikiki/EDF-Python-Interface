@@ -51,9 +51,9 @@ amp = 1
 t = np.arange(N_samples)
 
 # Create two sine waves
-amplitude1 = amp * np.sin(2 * np.pi * 50 * t / N_samples)
-amplitude2 = amp * np.sin(2 * np.pi * 100 * t / N_samples)
-amplitude3 = amp * np.sin(2 * np.pi * 15 * t / N_samples)
+amplitude1 = 1 * np.sin(2 * np.pi * 50 * t / N_samples)
+amplitude2 = 2 * np.sin(2 * np.pi * 100 * t / N_samples)
+amplitude3 = 3 * np.sin(2 * np.pi * 15 * t / N_samples)
 amplitude = amplitude1 + amplitude2 + amplitude3
 # amplitude1 = np.sin(2*np.pi*signal1Frequency*time)
 
@@ -128,6 +128,6 @@ while(True):
         sock.sendto(sample_struct, (UDP_IP, UDP_PORT))
         print(struct.unpack('1i 64d 64d', sample_struct))
         cnt += 1
-        sleep(0.1)
+        # sleep(0.1)
     print('Sample finshed to send')
-    sleep(1)
+    # sleep(1)

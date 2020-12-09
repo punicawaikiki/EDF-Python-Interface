@@ -3,6 +3,7 @@ import socket
 import matplotlib.pyplot as plotter
 from time import sleep
 import struct
+import matplotlib.pyplot as plt
  
 UDP_STRUCT_SIZE = 64
 
@@ -37,6 +38,9 @@ amplitude1 = amp1 * np.sin(2 * np.pi * signal1Frequency * t / N_samples)
 amplitude2 = amp2 * np.sin(2 * np.pi * signal2Frequency * t / N_samples)
 amplitude3 = amp3 * np.sin(2 * np.pi * signal3Frequency * t / N_samples)
 amplitude = amplitude1 + amplitude2 + amplitude3
+
+# plt.plot(t, amplitude)
+# plt.show()
 
 UDP_IP = "192.168.1.5"
 UDP_PORT = 55556

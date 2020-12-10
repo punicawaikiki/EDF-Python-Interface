@@ -22,10 +22,10 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("EDF GUI")
         self.resize(1920, 1080)
-        # self.setGeometry(100, 100, 600, 500)
         # # number of samples
         self.numberOfSamples = 1024
         self.time = np.arange(self.numberOfSamples)
+
         # sin signal preferences
         # amplitude:
         self.ampl1 = 1
@@ -40,19 +40,6 @@ class MainWindow(QMainWindow):
         self.center()
         self.UiComponents()
         self.show()
-
-
-        # self.x = self.time
-        # self.y = self.generate_sin_signals()
-
-        # pen = pg.mkPen(color=(0, 0, 0))
-        # self.data_line =  self.graphWidget.plot(self.x, self.y, pen=pen)
-        # self.timer = QtCore.QTimer()
-        # self.timer.setInterval(500)
-        # self.timer.timeout.connect(self.update_plot_sin_data)
-        # self.timer.start()
-
-        # self.initUI()
 
     def UiComponents(self):
         # creating a widget object 
@@ -124,16 +111,6 @@ class MainWindow(QMainWindow):
         # setting this layout to the widget 
         self.widget.setLayout(self.layout) 
   
-        # adding widgets in the layout in their proper positions 
-        # button goes in upper-left 
-        # self.layout.addWidget(btn, 0, 0) 
-  
-        # # text edit goes in middle-left 
-        # self.layout.addWidget(text, 1, 0) 
-  
-        # # check box widget goes in bottom-left 
-        # self.layout.addWidget(check, 3, 0) 
-  
         # plot window goes on right side, spanning 3 rows 
         self.layout.addWidget(self.signalFrequency1Label, 3, 1, 1, 2)
         self.layout.addWidget(self.signalFrequency1TextBox, 3, 2, 1, 2)
@@ -150,31 +127,6 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.fftResultsPlot, 8, 4, 5, 15) 
         # setting this widget as central widget of the main widow 
         self.setCentralWidget(self.widget) 
-
-    def initUI(self):
-        # self.resize(1920, 1080)
-        # self.center()
-        # self.setWindowTitle('EDF GUI')
-
-        self.widget = QtWidgets.QWidget()
-        self.button = QtWidgets.QPushButton('Push Button')
-
-        # creating a plot window 
-        self.plot = pg.plot()
-  
-        # create pyqt5graph bar graph item 
-        # with width = 0.6 
-        # with bar colors = green
-        # self.input_signal = pg.GraphicsItem(x = self.x, height = self.y, width = 0.6, brush ='g')
-        self.bargraph = pg.BarGraphItem(x = x, height = y1, width = 0.6, brush ='g') 
-
-        # add item to plot window 
-        # adding bargraph item to the plot window 
-        # self.plot.addItem(self.input_signal) 
-        self.plot.addItem(self.bargraph) 
-
-        # self.init_signal_UI()
-        self.show()
 
     def center(self):
         qr = self.frameGeometry()

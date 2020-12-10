@@ -18,7 +18,7 @@ sock.bind((UDP_IP, UDP_PORT))
 cnt = 0
 while True:
     data, addr = sock.recvfrom(1512) # buffer size
-    test = struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)
+    receivedData = struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)
     receivedPacketNumber = int (struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)[0])
     receivedStruct = struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)[1:SAMPLE_ARRAY_SIZE + 1]
     for sample in range(SAMPLE_ARRAY_SIZE):

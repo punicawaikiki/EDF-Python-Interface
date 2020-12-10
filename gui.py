@@ -1,4 +1,5 @@
 from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 # importing Qt widgets 
 from PyQt5.QtWidgets import *
 import sys 
@@ -11,17 +12,45 @@ import numpy as np
 import socket
 import struct
 
+UDP_SEND_IP = "192.168.1.5"
+UDP_RECEIVE_IP = "192.168.1.1"
+UDP_PORT = 55556
+SAMPLE_ARRAY_SIZE = 64
+FFT_SIZE = 512
+FFT_EPOCHES = int(FFT_SIZE / SAMPLE_ARRAY_SIZE)
+
 # Create own class for PlotCurveItem to ignore mouse wheel
 class MyPlotCurveItem(pg.PlotCurveItem):
     def wheelEvent(self, event):
         event.accept()
 
+class UDPWorker(QtCore.QObject):
+    dataChanged = QtCore.pyqtSignal(np.ndarray)
+    
+    def __init__(self, parent=None):
+        super(UDPWorker, self).__init__(parent)
+        self.server_start = False
+
+    @QtCore.pyqtSlot()
+    def start(self):
+        self.server_start = True
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind((UDP_RECEIVE_IP, UDP_PORT))
+        self.process()
+
+    def process(self):
+        while self.server_start:
+            data, addr = self.sock.recvfrom(1512)
+            receivedData = struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)
+            self.dataChanged.emit(receivedData)
+
 
 class MainWindow(QMainWindow):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__()
+    started = QtCore.pyqtSignal()
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
         self.setWindowTitle("EDF GUI")
+
         self.resize(1920, 1080)
         # number of samples
         self.numberOfSamples = 1024
@@ -33,8 +62,6 @@ class MainWindow(QMainWindow):
         self.epochesCnt = 0
         # init time array
         self.time = np.arange(self.numberOfSamples)
-        self.UDP_IP = "192.168.1.5"      
-        self.UDP_PORT = 55556
         
 
         # sin signal preferences
@@ -49,6 +76,10 @@ class MainWindow(QMainWindow):
         self.signalFrequency3 = 200
 
         self.sinSignal = np.zeros(self.numberOfSamples)
+
+        ## fft result variables
+        self.fftpacketNumberArray = np.zeros(FFT_EPOCHES)
+        self.fftResultsArray = np.zeros(FFT_SIZE)
 
         # config window
         self.center()
@@ -65,6 +96,11 @@ class MainWindow(QMainWindow):
     def UiComponents(self):
         # creating a widget object 
         self.widget = QWidget() 
+
+        self.btn = QPushButton("Click Me")
+        self.btn.clicked.connect(self.started)
+
+        self.lst = QtWidgets.QListWidget()
 
         # User Frequency Signal 1
         self.signalFrequency1Label = QLabel("Signal 1 Frequency")
@@ -118,7 +154,7 @@ class MainWindow(QMainWindow):
         # plot color
         pen = pg.mkPen(color=(0, 0, 0))
         # create fft Output signals
-        self.fftOutput = MyPlotCurveItem(x = np.zeros(1024), y = np.zeros(1024), pen = pen)  
+        self.fftOutput = MyPlotCurveItem(x = np.zeros(self.numberOfSamples), y = np.zeros(self.numberOfSamples), pen = pen)  
         # add item to plot window 
         self.fftResultsPlot.addItem(self.fftOutput) 
         # set plot properties
@@ -146,6 +182,8 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.inputSignalPlot, 2, 4, 5, 15)
         self.layout.addWidget(self.fftResultsLabel, 7, 4, 1, 15) 
         self.layout.addWidget(self.fftResultsPlot, 8, 4, 5, 15) 
+        self.layout.addWidget(self.btn, 3, 4, 1, 2)
+        self.layout.addWidget(self.lst, 20, 20, 5, 5)
         # setting this widget as central widget of the main widow 
         self.setCentralWidget(self.widget) 
 
@@ -175,12 +213,28 @@ class MainWindow(QMainWindow):
         # increase epoch counter
         self.epochesCnt += 1
 
+    @QtCore.pyqtSlot(np.ndarray)
+    def updateFFTData(self, data):
+        receivedPacketNumber = int (data[0])
+        receivedFFTArray = data[1:]
+        for sample in range(SAMPLE_ARRAY_SIZE):
+            if self.fftpacketNumberArray[receivedPacketNumber] == 0:
+                self.fftResultsArray[sample + receivedPacketNumber * SAMPLE_ARRAY_SIZE] = receivedFFTArray[sample]
+            else:
+                break
+        self.fftpacketNumberArray[receivedPacketNumber] = 1
+        if (np.count_nonzero(self.fftpacketNumberArray) == FFT_EPOCHES):
+            #  TODO: need to change this values
+            tpCount = self.numberOfSamples
+            values = np.arange(int(tpCount/2))
+            self.fftOutput.setData(values, data)
+        print('here')
 
     def udpSendData(self, udpPacketTime, udpPacketData):
         sock = socket.socket(socket.AF_INET,
         socket.SOCK_DGRAM) #UDP
         sample_struct = struct.pack('1i 64d 64d', self.epochesCnt, *udpPacketTime, *udpPacketData)
-        sock.sendto(sample_struct, (self.UDP_IP, self.UDP_PORT))
+        sock.sendto(sample_struct, (UDP_SEND_IP, UDP_PORT))
 
 
     def generate_sin_signals(self, time):
@@ -192,6 +246,12 @@ class MainWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     w = MainWindow()
+    worker = UDPWorker()
+    thread = QtCore.QThread()
+    thread.start()
+    worker.moveToThread(thread)
+    w.started.connect(worker.start)
+    worker.dataChanged.connect(w.updateFFTData)
     sys.exit(app.exec_())
 
 if __name__ == '__main__':

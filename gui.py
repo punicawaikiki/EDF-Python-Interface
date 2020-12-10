@@ -1,4 +1,4 @@
-# from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore
 # importing Qt widgets 
 from PyQt5.QtWidgets import *
 import sys 
@@ -9,6 +9,12 @@ import sys  # We need sys so that we can pass argv to QApplication
 import os
 import numpy as np
 from random import randint
+
+# Create own class for PlotCurveItem to ignore mouse wheel
+class MyPlotCurveItem(pg.PlotCurveItem):
+    def wheelEvent(self, event):
+        event.accept()
+
 
 class MainWindow(QMainWindow):
 
@@ -51,7 +57,28 @@ class MainWindow(QMainWindow):
     def UiComponents(self):
         # creating a widget object 
         self.widget = QWidget() 
-  
+
+        # User Frequency Signal 1
+        self.signalFrequency1Label = QLabel("Signal 1 Frequency")
+        self.signalFrequency1TextBox = QLineEdit(f'{self.signalFrequency1}')
+        self.signalFrequency1TextBox.setAlignment(QtCore.Qt.AlignRight)
+        self.signalFrequency1TextBox.setFixedWidth(100)
+        self.signalFrequency1LabelUnits = QLabel("Hz")
+
+        # User Frequency Signal 2
+        self.signalFrequency2Label = QLabel("Signal 2 Frequency")
+        self.signalFrequency2TextBox = QLineEdit(f'{self.signalFrequency2}')
+        self.signalFrequency2TextBox.setAlignment(QtCore.Qt.AlignRight)
+        self.signalFrequency2TextBox.setFixedWidth(100)
+        self.signalFrequency2LabelUnits = QLabel("Hz")
+
+        # User Frequency Signal 3
+        self.signalFrequency3Label = QLabel("Signal 3 Frequency")
+        self.signalFrequency3TextBox = QLineEdit(f'{self.signalFrequency3}')
+        self.signalFrequency3TextBox.setAlignment(QtCore.Qt.AlignRight)
+        self.signalFrequency3TextBox.setFixedWidth(100)
+        self.signalFrequency3LabelUnits = QLabel("Hz")
+
         # creating a push button object 
         btn = QPushButton('Push Button') 
   
@@ -61,24 +88,34 @@ class MainWindow(QMainWindow):
         # creating a check box widget 
         check = QCheckBox("Check Box") 
   
+        # Creating Plot Label for Input Signal
+        self.inputSignalLabel = QLabel("Input Signal to STM32")
         # creating a plot window for input Signals
         self.inputSignalPlot = pg.plot() 
-
+        # plot color
+        pen = pg.mkPen(color=(0, 0, 0))
         # create input Signal for FreeRTOS
-        self.inputSignal = pg.PlotCurveItem(x = self.time, y = self.generate_sin_signals())  
+        self.inputSignal = MyPlotCurveItem(x = self.time, y = self.generate_sin_signals(), pen = pen)  
         # add item to plot window 
-        self.inputSignalPlot.addItem(self.inputSignal) 
+        self.inputSignalPlot.addItem(self.inputSignal)
+        # set plot properties
+        self.inputSignalPlot.setXRange(0, 1024, padding=0) 
+        self.inputSignalPlot.setBackground('w')
 
 
+        # Creating Plto Label for fft results
+        self.fftResultsLabel = QLabel("FFT Results")
         # creating a plot window for fft
-        self.fftOutputPlot = pg.plot() 
-
+        self.fftResultsPlot = pg.plot() 
+        # plot color
+        pen = pg.mkPen(color=(0, 0, 0))
         # create fft Output signals
-        self.fftOutput = pg.PlotCurveItem(x = np.zeros(1024), y = np.zeros(1024))  
+        self.fftOutput = MyPlotCurveItem(x = np.zeros(1024), y = np.zeros(1024), pen = pen)  
         # add item to plot window 
-        self.fftOutputPlot.addItem(self.fftOutput) 
-
-        self.inputSignalLabel = QLabel("Input Signal to STM32")
+        self.fftResultsPlot.addItem(self.fftOutput) 
+        # set plot properties
+        self.fftResultsPlot.setXRange(0, 512, padding=0)
+        self.fftResultsPlot.setBackground('w')
 
   
         # Creating a grid layout 
@@ -98,9 +135,19 @@ class MainWindow(QMainWindow):
         # self.layout.addWidget(check, 3, 0) 
   
         # plot window goes on right side, spanning 3 rows 
-        self.layout.addWidget(self.inputSignalLabel, 0, 0)
-        self.layout.addWidget(self.inputSignalPlot, 1, 4) 
-        self.layout.addWidget(self.fftOutputPlot, 2, 4) 
+        self.layout.addWidget(self.signalFrequency1Label, 3, 1, 1, 2)
+        self.layout.addWidget(self.signalFrequency1TextBox, 3, 2, 1, 2)
+        self.layout.addWidget(self.signalFrequency1LabelUnits, 3, 3, 1, 2)
+        self.layout.addWidget(self.signalFrequency2Label, 4, 1, 1, 2)
+        self.layout.addWidget(self.signalFrequency2TextBox, 4, 2, 1, 2)
+        self.layout.addWidget(self.signalFrequency2LabelUnits, 4, 3, 1, 2)
+        self.layout.addWidget(self.signalFrequency3Label, 5, 1, 1, 2)
+        self.layout.addWidget(self.signalFrequency3TextBox, 5, 2, 1, 2)
+        self.layout.addWidget(self.signalFrequency3LabelUnits, 5, 3, 1, 2)
+        self.layout.addWidget(self.inputSignalLabel, 1, 4, 1, 15)
+        self.layout.addWidget(self.inputSignalPlot, 2, 4, 5, 15)
+        self.layout.addWidget(self.fftResultsLabel, 7, 4, 1, 15) 
+        self.layout.addWidget(self.fftResultsPlot, 8, 4, 5, 15) 
         # setting this widget as central widget of the main widow 
         self.setCentralWidget(self.widget) 
 
@@ -114,12 +161,6 @@ class MainWindow(QMainWindow):
 
         # creating a plot window 
         self.plot = pg.plot()
-
-        # create list for y-axis 
-        y1 = [5, 5, 7, 10, 3, 8, 9, 1, 6, 2] 
-  
-        # create horizontal list i.e x-axis 
-        x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] 
   
         # create pyqt5graph bar graph item 
         # with width = 0.6 

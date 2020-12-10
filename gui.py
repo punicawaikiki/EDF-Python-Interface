@@ -24,7 +24,9 @@ class MainWindow(QMainWindow):
         self.resize(1920, 1080)
         # # number of samples
         self.numberOfSamples = 1024
+        self.sizeOfUDPPacket = 64
         self.time = np.arange(self.numberOfSamples)
+        self.udpTime = np.arange(self.sizeOfUDPPacket)
 
         # sin signal preferences
         # amplitude:
@@ -37,9 +39,28 @@ class MainWindow(QMainWindow):
         self.signalFrequency2 = 50
         self.signalFrequency3 = 200
 
+        self.sinSignal = np.zeros(self.numberOfSamples)
+
+        # config window
         self.center()
         self.UiComponents()
         self.show()
+
+        # create qt timer
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(50)
+        self.timer.timeout.connect(self.update_signals)
+        self.timer.start()
+
+
+    def update_signals(self):
+        self.time = self.time[self.sizeOfUDPPacket:] # Remove the first self.sizeOfUDPPacket x elements
+        for i in range(self.sizeOfUDPPacket):
+            self.time = np.append(self.time, self.time[-1] + 1)
+        self.sinSignal = self.sinSignal[self.sizeOfUDPPacket:] # Remove the first self.sizeOfUDPPacket y elements
+        self.sinSignal = np.append(self.sinSignal, self.generate_sin_signals(self.udpTime)) # Add sizeOfUDPPacket elements
+        self.inputSignal.setData(self.time, self.sinSignal)
+
 
     def UiComponents(self):
         # creating a widget object 
@@ -82,11 +103,11 @@ class MainWindow(QMainWindow):
         # plot color
         pen = pg.mkPen(color=(0, 0, 0))
         # create input Signal for FreeRTOS
-        self.inputSignal = MyPlotCurveItem(x = self.time, y = self.generate_sin_signals(), pen = pen)  
+        self.inputSignal = MyPlotCurveItem(x = self.time, y = self.sinSignal, pen = pen)
         # add item to plot window 
         self.inputSignalPlot.addItem(self.inputSignal)
         # set plot properties
-        self.inputSignalPlot.setXRange(0, 1024, padding=0) 
+        # self.inputSignalPlot.setXRange(0, 1024, padding=0) 
         self.inputSignalPlot.setBackground('w')
 
 
@@ -134,10 +155,10 @@ class MainWindow(QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
-    def generate_sin_signals(self):
-        amplitude1 = self.ampl1 * np.sin(2 * np.pi * self.signalFrequency1 * self.time / self.numberOfSamples)
-        amplitude2 = self.ampl2 * np.sin(2 * np.pi * self.signalFrequency2 * self.time / self.numberOfSamples)
-        amplitude3 = self.ampl3 * np.sin(2 * np.pi * self.signalFrequency3 * self.time / self.numberOfSamples)
+    def generate_sin_signals(self, time):
+        amplitude1 = self.ampl1 * np.sin(2 * np.pi * self.signalFrequency1 * time / self.numberOfSamples)
+        amplitude2 = self.ampl2 * np.sin(2 * np.pi * self.signalFrequency2 * time / self.numberOfSamples)
+        amplitude3 = self.ampl3 * np.sin(2 * np.pi * self.signalFrequency3 * time / self.numberOfSamples)
         return amplitude1 + amplitude2 + amplitude3
 
 

@@ -8,7 +8,8 @@ import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
 import os
 import numpy as np
-from random import randint
+import socket
+import struct
 
 # Create own class for PlotCurveItem to ignore mouse wheel
 class MyPlotCurveItem(pg.PlotCurveItem):
@@ -22,11 +23,19 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("EDF GUI")
         self.resize(1920, 1080)
-        # # number of samples
+        # number of samples
         self.numberOfSamples = 1024
+        # size of data array in one udp packet
         self.sizeOfUDPPacket = 64
+        # value of samples for fft combined from self.sizeOfUDPPacket * self.epoches
+        self.epoches = 16
+        # epoch counter for updating udp data and plot data
+        self.epochesCnt = 0
+        # init time array
         self.time = np.arange(self.numberOfSamples)
-        self.udpTime = np.arange(self.sizeOfUDPPacket)
+        self.UDP_IP = "192.168.1.5"      
+        self.UDP_PORT = 55556
+        
 
         # sin signal preferences
         # amplitude:
@@ -48,18 +57,9 @@ class MainWindow(QMainWindow):
 
         # create qt timer
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(50)
+        self.timer.setInterval(10)
         self.timer.timeout.connect(self.update_signals)
         self.timer.start()
-
-
-    def update_signals(self):
-        self.time = self.time[self.sizeOfUDPPacket:] # Remove the first self.sizeOfUDPPacket x elements
-        for i in range(self.sizeOfUDPPacket):
-            self.time = np.append(self.time, self.time[-1] + 1)
-        self.sinSignal = self.sinSignal[self.sizeOfUDPPacket:] # Remove the first self.sizeOfUDPPacket y elements
-        self.sinSignal = np.append(self.sinSignal, self.generate_sin_signals(self.udpTime)) # Add sizeOfUDPPacket elements
-        self.inputSignal.setData(self.time, self.sinSignal)
 
 
     def UiComponents(self):
@@ -155,19 +155,39 @@ class MainWindow(QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
+    def update_signals(self):
+        # buffer time and data array
+        udpPacketTime = np.zeros(self.sizeOfUDPPacket)
+        udpPacketData = np.zeros(self.sizeOfUDPPacket)
+        # check if counter reached maximum of self.epoches
+        if self.epochesCnt == self.epoches:
+            self.epochesCnt = 0
+        # replace self.sizeOfUDPPacket elements in self.sinSignal array
+        for i in range(self.sizeOfUDPPacket):
+            self.sinSignal[i + self.epochesCnt * self.sizeOfUDPPacket] \
+                = udpPacketData[i] \
+                    = self.generate_sin_signals(i + self.epochesCnt * self.sizeOfUDPPacket)
+            udpPacketTime[i] = i + self.epochesCnt * self.sizeOfUDPPacket
+        # send self.sizeOfUDPPacket elements to stm32
+        self.udpSendData(udpPacketTime = udpPacketTime, udpPacketData = udpPacketData)
+        # update plot data
+        self.inputSignal.setData(self.time, self.sinSignal)
+        # increase epoch counter
+        self.epochesCnt += 1
+
+
+    def udpSendData(self, udpPacketTime, udpPacketData):
+        sock = socket.socket(socket.AF_INET,
+        socket.SOCK_DGRAM) #UDP
+        sample_struct = struct.pack('1i 64d 64d', self.epochesCnt, *udpPacketTime, *udpPacketData)
+        sock.sendto(sample_struct, (self.UDP_IP, self.UDP_PORT))
+
+
     def generate_sin_signals(self, time):
         amplitude1 = self.ampl1 * np.sin(2 * np.pi * self.signalFrequency1 * time / self.numberOfSamples)
         amplitude2 = self.ampl2 * np.sin(2 * np.pi * self.signalFrequency2 * time / self.numberOfSamples)
         amplitude3 = self.ampl3 * np.sin(2 * np.pi * self.signalFrequency3 * time / self.numberOfSamples)
         return amplitude1 + amplitude2 + amplitude3
-
-
-    def update_plot_sin_data(self):
-        print('signal plot update')
-        self.x = self.time
-        self.y = self.generate_sin_signals()
-        self.data_line.setData(self.x, self.y)  # Update the data.
-
 
 def main():
     app = QApplication(sys.argv)

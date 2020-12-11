@@ -236,14 +236,20 @@ class MainWindow(QMainWindow):
         # plot color
         pen = pg.mkPen(color=(105, 105, 105))
         # create input Signal for FreeRTOS
-        self.inputSignal = MyPlotCurveItem(x = self.time, y = self.sinSignal, pen = pen)
+        self.inputSignal = pg.PlotCurveItem(x = self.time, y = self.sinSignal, pen = pen)
         # add item to plot window 
         self.inputSignalPlot.addItem(self.inputSignal)
         # set plot properties
         # self.inputSignalPlot.setXRange(0, 1024, padding=0) 
         self.inputSignalPlot.setBackground('w')
+        # add grid
+        self.inputSignalGrid = pg.GridItem()
+        self.inputSignalPlot.addItem(self.inputSignalGrid)
+        # hide x and y axis
+        self.inputSignalPlot.getPlotItem().hideAxis('bottom')
+        self.inputSignalPlot.getPlotItem().hideAxis('left')
 
-        # Creating Plto Label for fft results
+        # Creating Plot Label for fft results
         self.fftResultsLabel = QLabel("FFT Results")
         self.fftResultsLabel.setMaximumHeight(10)
         # creating a plot window for fft

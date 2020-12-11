@@ -8,6 +8,7 @@ import sys  # We need sys so that we can pass argv to QApplication
 import numpy as np
 import socket
 import struct
+from dialogWindows import IPAddressDialog
 
 UDP_SEND_IP = "192.168.1.5"
 UDP_RECEIVE_IP = "192.168.1.1"
@@ -69,6 +70,17 @@ class UDPReceiver(QtCore.QObject):
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
+
+        # # get ethernet interface from user
+        # self.ipDialog = IPAddressDialog(self)
+        # if self.ipDialog.exec_():
+        #     print("Success")
+        # else:
+        #     print("Cancel!")
+        # self.dlg = QDialog(self)
+        # if (not self.dlg.exec_() ):
+        #     sys.exit()
+
         self.setWindowTitle("EDF GUI")
         self.resize(1920, 1080)
         # number of samples
@@ -332,11 +344,10 @@ class MainWindow(QMainWindow):
         # self.fftOutput.setData(values, data)
         self.fftOutput.setOpts(x = values, height = data)
         max_index_col = np.argmax(data, axis=0)
-        print('FFT Data Updated')
+        # print('FFT Data Updated')
 
     def udpSendData(self, udpPacketTime, udpPacketData):
-        sock = socket.socket(socket.AF_INET,
-        socket.SOCK_DGRAM) #UDP
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #UDP
         sample_struct = struct.pack('1i 64d 64d', self.epochesCnt, *udpPacketTime, *udpPacketData)
         sock.sendto(sample_struct, (UDP_SEND_IP, UDP_SEND_PORT))
 
@@ -355,7 +366,7 @@ class MainWindow(QMainWindow):
     # value of signal1AmplitudeTextBox has changed
     @QtCore.pyqtSlot()
     def signal1AmplitudeButton_clicked(self):
-        self.ampl1 = int(self.signal1AmplitudeTextBox.text())
+        self.ampl1 = float(self.signal1AmplitudeTextBox.text())
 
     # value of signal2FrequencyTextbox has changed
     @QtCore.pyqtSlot()
@@ -365,7 +376,7 @@ class MainWindow(QMainWindow):
     # value of signal2AmplitudeTextBox has changed
     @QtCore.pyqtSlot()
     def signal2AmplitudeButton_clicked(self):
-        self.ampl2 = int(self.signal2AmplitudeTextBox.text())
+        self.ampl2 = float(self.signal2AmplitudeTextBox.text())
 
     # value of signal3FrequencyTextbox has changed
     @QtCore.pyqtSlot()
@@ -375,7 +386,7 @@ class MainWindow(QMainWindow):
     # value of signal2AmplitudeTextBox has changed
     @QtCore.pyqtSlot()
     def signal3AmplitudeButton_clicked(self):
-        self.ampl3 = int(self.signal3AmplitudeTextBox.text())
+        self.ampl3 = float(self.signal3AmplitudeTextBox.text())
 
 
 def main():

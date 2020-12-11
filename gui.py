@@ -12,6 +12,8 @@ import socket
 import struct
 from time import sleep
 
+from pyqtgraph.graphicsItems.GridItem import GridItem
+
 UDP_SEND_IP = "192.168.1.5"
 UDP_RECEIVE_IP = "192.168.1.1"
 UDP_SEND_PORT = 55556
@@ -121,7 +123,7 @@ class MainWindow(QMainWindow):
 
         # create qt timer
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(10)
+        self.timer.setInterval(1)
         self.timer.timeout.connect(self.update_signals)
         self.timer.start()
 
@@ -232,7 +234,7 @@ class MainWindow(QMainWindow):
         # creating a plot window for input Signals
         self.inputSignalPlot = pg.plot() 
         # plot color
-        pen = pg.mkPen(color=(0, 0, 0))
+        pen = pg.mkPen(color=(105, 105, 105))
         # create input Signal for FreeRTOS
         self.inputSignal = MyPlotCurveItem(x = self.time, y = self.sinSignal, pen = pen)
         # add item to plot window 
@@ -240,7 +242,6 @@ class MainWindow(QMainWindow):
         # set plot properties
         # self.inputSignalPlot.setXRange(0, 1024, padding=0) 
         self.inputSignalPlot.setBackground('w')
-
 
         # Creating Plto Label for fft results
         self.fftResultsLabel = QLabel("FFT Results")
@@ -250,7 +251,7 @@ class MainWindow(QMainWindow):
         # plot color
         pen = pg.mkPen(color=(0, 0, 0))
         # create fft Output signals
-        self.fftOutput = MyPlotCurveItem(x = np.zeros(self.numberOfSamples), y = np.zeros(self.numberOfSamples), pen = pen)  
+        self.fftOutput = pg.BarGraphItem(x = np.zeros(self.numberOfSamples), height = np.zeros(self.numberOfSamples), width=0.8, fillLevel=1, brush=(105, 105, 105))  
         # add item to plot window 
         self.fftResultsPlot.addItem(self.fftOutput) 
         # set plot properties
@@ -335,7 +336,8 @@ class MainWindow(QMainWindow):
     def updateFFTData(self, data):
         tpCount = self.numberOfSamples
         values = np.arange(int(tpCount/2))
-        self.fftOutput.setData(values, data)
+        # self.fftOutput.setData(values, data)
+        self.fftOutput.setOpts(x = values, height = data)
         max_index_col = np.argmax(data, axis=0)
         print('FFT Data Updated')
 

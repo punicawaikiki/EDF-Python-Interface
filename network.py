@@ -1,10 +1,14 @@
 import platform    # For getting the operating system name
 import subprocess  # For executing a shell command
 
+
+# TODO: May Check of UDP Port is possible?
+
 class NetworkChecker():
     def __init__(self, ip):
         self.ip = ip
 
+    # send pings to host and returns True if reachable
     def ping(self, host=None):
         if host is None:
             print(f'[WARNING:] Class IP ({self.ip}) is used')

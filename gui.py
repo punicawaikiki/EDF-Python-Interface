@@ -3,16 +3,11 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 import sys 
 # from PyQt5.QtWidgets import *
-from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
-import os
 import numpy as np
 import socket
 import struct
-from time import sleep
-
-from pyqtgraph.graphicsItems.GridItem import GridItem
 
 UDP_SEND_IP = "192.168.1.5"
 UDP_RECEIVE_IP = "192.168.1.1"
@@ -35,11 +30,6 @@ class QVLine(QFrame):
         super(QVLine, self).__init__()
         self.setFrameShape(QFrame.VLine)
         self.setFrameShadow(QFrame.Sunken)
-
-# Create own class for PlotCurveItem to ignore mouse wheel
-class MyPlotCurveItem(pg.PlotCurveItem):
-    def wheelEvent(self, event):
-        event.accept()
 
 class UDPReceiver(QtCore.QObject):
     dataChanged = QtCore.pyqtSignal(np.ndarray)
@@ -91,8 +81,10 @@ class MainWindow(QMainWindow):
         self.epochesCnt = 0
         # init time array
         self.time = np.arange(self.numberOfSamples)
+        # get local ip address 
+        # TODO: check if also working on linux
+        self.ipAddress = socket.gethostbyname(socket.gethostname())
         
-
         # sin signal preferences
         # amplitude:
         self.ampl1 = 1
@@ -133,6 +125,10 @@ class MainWindow(QMainWindow):
     def UiComponents(self):
         # creating a widget object 
         self.widget = QWidget() 
+
+        # IP Address
+        self.ipAddressLabel = QLabel(f'IP: {self.ipAddress}')
+        self.ipAddressLabel.setAlignment(QtCore.Qt.AlignCenter)
 
         # --------- Signal 1 --------
         # Frequency Widgets
@@ -217,16 +213,6 @@ class MainWindow(QMainWindow):
         # setting geometry of button 
         self.signal3AmplitudeButton.setFixedWidth(30)
         self.signal3AmplitudeButton.clicked.connect(self.signal3AmplitudeButton_clicked)
-
-
-        # creating a push button object 
-        btn = QPushButton('Push Button') 
-  
-        # creating a line edit widget 
-        text = QLineEdit("Line Edit") 
-  
-        # creating a check box widget 
-        check = QCheckBox("Check Box") 
   
         # Creating Plot Label for Input Signal
         self.inputSignalLabel = QLabel("Input Signal to STM32")
@@ -271,7 +257,8 @@ class MainWindow(QMainWindow):
         # setting this layout to the widget 
         self.widget.setLayout(self.layout) 
   
-        # plot window goes on right side, spanning 3 rows 
+        # plot window goes on right side, spanning 3 rows
+        self.layout.addWidget(self.ipAddressLabel, 1, 46, 1, 2) 
         self.layout.addWidget(QHLine(), 2, 1, 1, 47)
         self.layout.addWidget(self.signal1Label, 3, 2, 1, 3)
         self.layout.addWidget(self.signal1FrequencyLabel, 4, 1, 1, 2)

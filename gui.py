@@ -11,10 +11,13 @@ import os
 import numpy as np
 import socket
 import struct
+import ptvsd
+from time import sleep
 
 UDP_SEND_IP = "192.168.1.5"
 UDP_RECEIVE_IP = "192.168.1.1"
-UDP_PORT = 55556
+UDP_SEND_PORT = 55556
+UDP_RECEIVE_PORT = 55555
 SAMPLE_ARRAY_SIZE = 64
 FFT_SIZE = 512
 FFT_EPOCHES = int(FFT_SIZE / SAMPLE_ARRAY_SIZE)
@@ -30,19 +33,36 @@ class UDPWorker(QtCore.QObject):
     def __init__(self, parent=None):
         super(UDPWorker, self).__init__(parent)
         self.server_start = False
+        self.fftpacketNumberArray = np.zeros(FFT_EPOCHES)
+        self.fftResultsArray = np.zeros(FFT_SIZE)
 
-    @QtCore.pyqtSlot()
+    # @QtCore.pyqtSlot()
     def start(self):
+        print('woker.start() called')
         self.server_start = True
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((UDP_RECEIVE_IP, UDP_PORT))
+        self.sock.bind((UDP_RECEIVE_IP, UDP_RECEIVE_PORT))
         self.process()
 
     def process(self):
+        ptvsd.debug_this_thread()
+        print('process called')
         while self.server_start:
             data, addr = self.sock.recvfrom(1512)
             receivedData = struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)
-            self.dataChanged.emit(receivedData)
+            receivedPacketNumber = int (receivedData[0])
+            receivedFFTArray = receivedData[1:]
+            for sample in range(SAMPLE_ARRAY_SIZE):
+                if self.fftpacketNumberArray[receivedPacketNumber] == 0:
+                    self.fftResultsArray[sample + receivedPacketNumber * SAMPLE_ARRAY_SIZE] = receivedFFTArray[sample]
+                else:
+                    break
+            self.fftpacketNumberArray[receivedPacketNumber] = 1
+            if (np.count_nonzero(self.fftpacketNumberArray) == FFT_EPOCHES):
+                max_index_col = np.argmax(self.fftResultsArray, axis=0)
+                self.dataChanged.emit(self.fftResultsArray)
+                self.fftpacketNumberArray = np.zeros(FFT_EPOCHES)
+                print('FFT Receive Done')
 
 
 class MainWindow(QMainWindow):
@@ -50,7 +70,6 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setWindowTitle("EDF GUI")
-
         self.resize(1920, 1080)
         # number of samples
         self.numberOfSamples = 1024
@@ -78,19 +97,20 @@ class MainWindow(QMainWindow):
         self.sinSignal = np.zeros(self.numberOfSamples)
 
         ## fft result variables
-        self.fftpacketNumberArray = np.zeros(FFT_EPOCHES)
         self.fftResultsArray = np.zeros(FFT_SIZE)
 
         # config window
         self.center()
         self.UiComponents()
         self.show()
-
+        
         # create qt timer
         self.timer = QtCore.QTimer()
         self.timer.setInterval(10)
         self.timer.timeout.connect(self.update_signals)
         self.timer.start()
+
+        # start pyqtsignal
 
 
     def UiComponents(self):
@@ -215,26 +235,17 @@ class MainWindow(QMainWindow):
 
     @QtCore.pyqtSlot(np.ndarray)
     def updateFFTData(self, data):
-        receivedPacketNumber = int (data[0])
-        receivedFFTArray = data[1:]
-        for sample in range(SAMPLE_ARRAY_SIZE):
-            if self.fftpacketNumberArray[receivedPacketNumber] == 0:
-                self.fftResultsArray[sample + receivedPacketNumber * SAMPLE_ARRAY_SIZE] = receivedFFTArray[sample]
-            else:
-                break
-        self.fftpacketNumberArray[receivedPacketNumber] = 1
-        if (np.count_nonzero(self.fftpacketNumberArray) == FFT_EPOCHES):
-            #  TODO: need to change this values
-            tpCount = self.numberOfSamples
-            values = np.arange(int(tpCount/2))
-            self.fftOutput.setData(values, data)
-        print('here')
+        tpCount = self.numberOfSamples
+        values = np.arange(int(tpCount/2))
+        self.fftOutput.setData(values, data)
+        max_index_col = np.argmax(data, axis=0)
+        print('FFT Data Updated')
 
     def udpSendData(self, udpPacketTime, udpPacketData):
         sock = socket.socket(socket.AF_INET,
         socket.SOCK_DGRAM) #UDP
         sample_struct = struct.pack('1i 64d 64d', self.epochesCnt, *udpPacketTime, *udpPacketData)
-        sock.sendto(sample_struct, (UDP_SEND_IP, UDP_PORT))
+        sock.sendto(sample_struct, (UDP_SEND_IP, UDP_SEND_PORT))
 
 
     def generate_sin_signals(self, time):

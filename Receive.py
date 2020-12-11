@@ -2,6 +2,7 @@ import numpy as np
 import socket
 import struct
 import matplotlib.pyplot as plotter
+from time import sleep
 
 EPOCHES = 16
 FFT_EPOCHES = int(EPOCHES / 2)
@@ -49,7 +50,11 @@ while True:
         axis[0].set_xlabel('Frequency')
         axis[0].set_ylabel('Amplitude')
 
-
-
+        max_value_position = np.argmax(dataArray)
+        print(f'Position: {max_value_position} Value: {dataArray[max_value_position]}')
+        if max_value_position != 200:
+            print('here')
+        packetNumberArray = np.zeros(FFT_EPOCHES)
+        # sleep(0.5)
         plotter.show()
         # cnt+=1

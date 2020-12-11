@@ -48,6 +48,10 @@ cnt = 0
 epoch_amplitude = np.array_split(amplitude, 16)
 epoch_time = np.array_split(time, 16)
 
+with open('your_file.txt', 'w') as f:
+    for item in amplitude:
+        f.write("%s\n" % item)
+
 while(True):
     for messageNumber in range(0, int(len(time) / UDP_STRUCT_SIZE)):
         sock = socket.socket(socket.AF_INET,

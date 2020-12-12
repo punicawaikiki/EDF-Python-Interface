@@ -21,8 +21,7 @@ class NetworkChecker(QtCore.QObject):
 
         # Building the command. Ex: "ping -c 1 google.com"
         command = ['ping', param, '1', UDP_DESTINATION_IP]
-
-        return subprocess.call(command) == 0
+        return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT) == 0
 
     QtCore.pyqtSlot()
     def checkDestination(self):

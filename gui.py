@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui
-# importing Qt widgets 
+# importing Qt widgets
 from PyQt5.QtWidgets import *
-import sys 
+import sys
 # from PyQt5.QtWidgets import *
 import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
@@ -9,14 +9,9 @@ import numpy as np
 import socket
 import struct
 from dialogWindows import IPAddressDialog
+from network import NetworkChecker
+from globals import *
 
-UDP_SEND_IP = "192.168.1.5"
-UDP_RECEIVE_IP = "192.168.1.1"
-UDP_SEND_PORT = 55556
-UDP_RECEIVE_PORT = 55555
-SAMPLE_ARRAY_SIZE = 64
-FFT_SIZE = 512
-FFT_EPOCHES = int(FFT_SIZE / SAMPLE_ARRAY_SIZE)
 
 # create class for horizontal line
 class QHLine(QFrame):
@@ -34,11 +29,10 @@ class QVLine(QFrame):
 
 class UDPReceiver(QtCore.QObject):
     dataChanged = QtCore.pyqtSignal(np.ndarray)
-    
     def start(self):
         print('woker.start() called')
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((UDP_RECEIVE_IP, UDP_RECEIVE_PORT))
+        self.sock.bind((UDP_SOURCE_IP, UDP_RECEIVE_PORT))
 
     @QtCore.pyqtSlot()
     def process(self):
@@ -93,10 +87,11 @@ class MainWindow(QMainWindow):
         self.epochesCnt = 0
         # init time array
         self.time = np.arange(self.numberOfSamples)
-        # get local ip address 
+        # get local ip address
         # TODO: check if also working on linux
-        self.ipAddress = socket.gethostbyname(socket.gethostname())
-        
+        self.sourceIpAddress = UDP_SOURCE_IP
+        self.destinationIpAddress = UDP_DESTINATION_IP
+
         # sin signal preferences
         # amplitude:
         self.ampl1 = 1
@@ -113,34 +108,42 @@ class MainWindow(QMainWindow):
         ## fft result variables
         self.fftResultsArray = np.zeros(FFT_SIZE)
 
+        # thread for receiving udp data
         self.udpReceiver = UDPReceiver()
-        self.thread = QtCore.QThread()
+        self.thread1 = QtCore.QThread()
         self.udpReceiver.dataChanged.connect(self.updateFFTData)
-        self.udpReceiver.moveToThread(self.thread)
-        self.thread.started.connect(self.udpReceiver.process)
-        self.thread.start()
+        self.udpReceiver.moveToThread(self.thread1)
+        self.thread1.started.connect(self.udpReceiver.process)
+        self.thread1.start()
 
+        # thread for checking if destination is reachable
+        self.networkChecker = NetworkChecker()
+        self.thread2 = QtCore.QThread()
+        self.networkChecker.destinationStatus.connect(self.updateDestinationAddress)
+        self.networkChecker.moveToThread(self.thread2)
+        self.thread2.started.connect(self.networkChecker.checkDestination)
+        self.thread2.start()
         # config window
         self.center()
         self.UiComponents()
         self.show()
 
-        # create qt timer
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(1)
-        self.timer.timeout.connect(self.update_signals)
-        self.timer.start()
+        # create qt send timer
+        self.timer1 = QtCore.QTimer()
+        self.timer1.setInterval(1)
+        self.timer1.timeout.connect(self.update_signals)
+        self.timer1.start()
 
         # start pyqtsignal
 
 
     def UiComponents(self):
-        # creating a widget object 
-        self.widget = QWidget() 
+        # creating a widget object
+        self.widget = QWidget()
 
-        # IP Address
-        self.ipAddressLabel = QLabel(f'IP: {self.ipAddress}')
-        self.ipAddressLabel.setAlignment(QtCore.Qt.AlignCenter)
+        # IP Address of Connected Device
+        self.ConnectedIpAddressLabel = QLabel(f'STM32 Status: -')
+        self.ConnectedIpAddressLabel.setAlignment(QtCore.Qt.AlignCenter)
 
         # --------- Signal 1 --------
         # Frequency Widgets
@@ -154,7 +157,7 @@ class MainWindow(QMainWindow):
         self.signal1FrequencyLabelUnits.setFixedWidth(20)
         # User Frequency Signal 1 change Button
         self.signal1FrequencyButton = QPushButton('OK')
-        # setting geometry of button 
+        # setting geometry of button
         self.signal1FrequencyButton.setFixedWidth(30)
         self.signal1FrequencyButton.clicked.connect(self.signal1FrequencyButton_clicked)
         # Amplitude Widgets
@@ -166,7 +169,7 @@ class MainWindow(QMainWindow):
         self.signal1AmplitudeLabelUnits.setFixedWidth(20)
         # User Frequency Signal 1 change Button
         self.signal1AmplitudeButton = QPushButton('OK')
-        # setting geometry of button 
+        # setting geometry of button
         self.signal1AmplitudeButton.setFixedWidth(30)
         self.signal1AmplitudeButton.clicked.connect(self.signal1AmplitudeButton_clicked)
 
@@ -182,7 +185,7 @@ class MainWindow(QMainWindow):
         self.signal2FrequencyLabelUnits.setFixedWidth(20)
         # User Frequency Signal 2 change Button
         self.signal2FrequencyButton = QPushButton('OK')
-        # setting geometry of button 
+        # setting geometry of button
         self.signal2FrequencyButton.setFixedWidth(30)
         self.signal2FrequencyButton.clicked.connect(self.signal2FrequencyButton_clicked)
         # Amplitude Widgets
@@ -194,7 +197,7 @@ class MainWindow(QMainWindow):
         self.signal2AmplitudeLabelUnits.setFixedWidth(20)
         # User Frequency Signal 2 change Button
         self.signal2AmplitudeButton = QPushButton('OK')
-        # setting geometry of button 
+        # setting geometry of button
         self.signal2AmplitudeButton.setFixedWidth(30)
         self.signal2AmplitudeButton.clicked.connect(self.signal2AmplitudeButton_clicked)
 
@@ -210,7 +213,7 @@ class MainWindow(QMainWindow):
         self.signal3FrequencyLabelUnits.setFixedWidth(20)
         # User Frequency Signal 3 change Button
         self.signal3FrequencyButton = QPushButton('OK')
-        # setting geometry of button 
+        # setting geometry of button
         self.signal3FrequencyButton.setFixedWidth(30)
         self.signal3FrequencyButton.clicked.connect(self.signal3FrequencyButton_clicked)
         # Amplitude Widgets
@@ -222,23 +225,23 @@ class MainWindow(QMainWindow):
         self.signal3AmplitudeLabelUnits.setFixedWidth(20)
         # User Frequency Signal 3 change Button
         self.signal3AmplitudeButton = QPushButton('OK')
-        # setting geometry of button 
+        # setting geometry of button
         self.signal3AmplitudeButton.setFixedWidth(30)
         self.signal3AmplitudeButton.clicked.connect(self.signal3AmplitudeButton_clicked)
-  
+
         # Creating Plot Label for Input Signal
         self.inputSignalLabel = QLabel("Input Signal to STM32")
         self.inputSignalLabel.setMaximumHeight(10)
         # creating a plot window for input Signals
-        self.inputSignalPlot = pg.plot() 
+        self.inputSignalPlot = pg.plot()
         # plot color
         pen = pg.mkPen(color=(105, 105, 105))
         # create input Signal for FreeRTOS
         self.inputSignal = pg.PlotCurveItem(x = self.time, y = self.sinSignal, pen = pen)
-        # add item to plot window 
+        # add item to plot window
         self.inputSignalPlot.addItem(self.inputSignal)
         # set plot properties
-        # self.inputSignalPlot.setXRange(0, 1024, padding=0) 
+        # self.inputSignalPlot.setXRange(0, 1024, padding=0)
         self.inputSignalPlot.setBackground('w')
         # add grid
         self.inputSignalGrid = pg.GridItem()
@@ -251,26 +254,24 @@ class MainWindow(QMainWindow):
         self.fftResultsLabel = QLabel("FFT Results")
         self.fftResultsLabel.setMaximumHeight(10)
         # creating a plot window for fft
-        self.fftResultsPlot = pg.plot() 
+        self.fftResultsPlot = pg.plot()
         # plot color
         pen = pg.mkPen(color=(0, 0, 0))
         # create fft Output signals
         self.fftOutput = pg.BarGraphItem(x = np.zeros(self.numberOfSamples), height = np.zeros(self.numberOfSamples), width=0.8, fillLevel=1, brush=(105, 105, 105))  
-        # add item to plot window 
-        self.fftResultsPlot.addItem(self.fftOutput) 
+        # add item to plot window
+        self.fftResultsPlot.addItem(self.fftOutput)
         # set plot properties
         self.fftResultsPlot.setXRange(0, 512, padding=0)
         self.fftResultsPlot.setBackground('w')
 
-  
-        # Creating a grid layout 
-        self.layout = QGridLayout() 
-  
-        # setting this layout to the widget 
-        self.widget.setLayout(self.layout) 
-  
+        # Creating a grid layout
+        self.layout = QGridLayout()
+        # setting this layout to the widget
+        self.widget.setLayout(self.layout)
+
         # plot window goes on right side, spanning 3 rows
-        self.layout.addWidget(self.ipAddressLabel, 1, 46, 1, 2) 
+        self.layout.addWidget(self.ConnectedIpAddressLabel, 1, 46, 1, 2)
         self.layout.addWidget(QHLine(), 2, 1, 1, 47)
         self.layout.addWidget(self.signal1Label, 3, 2, 1, 3)
         self.layout.addWidget(self.signal1FrequencyLabel, 4, 1, 1, 2)
@@ -306,10 +307,10 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.inputSignalLabel, 3, 8, 1, 40)
         self.layout.addWidget(self.inputSignalPlot, 4, 8, 20, 40)
         self.layout.addWidget(QHLine(), 24, 7, 1, 41)
-        self.layout.addWidget(self.fftResultsLabel, 25, 8, 1, 40) 
-        self.layout.addWidget(self.fftResultsPlot, 26, 8, 20, 40) 
-        # setting this widget as central widget of the main widow 
-        self.setCentralWidget(self.widget) 
+        self.layout.addWidget(self.fftResultsLabel, 25, 8, 1, 40)
+        self.layout.addWidget(self.fftResultsPlot, 26, 8, 20, 40)
+        # setting this widget as central widget of the main window
+        self.setCentralWidget(self.widget)
 
     def center(self):
         qr = self.frameGeometry()
@@ -346,10 +347,14 @@ class MainWindow(QMainWindow):
         max_index_col = np.argmax(data, axis=0)
         # print('FFT Data Updated')
 
+    @QtCore.pyqtSlot(str)
+    def updateDestinationAddress(self, strData):
+        self.ConnectedIpAddressLabel.setText(f'<font color="black">STM32 Status: </font>{strData}')
+
     def udpSendData(self, udpPacketTime, udpPacketData):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #UDP
         sample_struct = struct.pack('1i 64d 64d', self.epochesCnt, *udpPacketTime, *udpPacketData)
-        sock.sendto(sample_struct, (UDP_SEND_IP, UDP_SEND_PORT))
+        sock.sendto(sample_struct, (UDP_DESTINATION_IP, UDP_SEND_PORT))
 
 
     def generate_sin_signals(self, time):

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plotter
 from time import sleep
 import struct
 import matplotlib.pyplot as plt
- 
+
 UDP_STRUCT_SIZE = 64
 
 # How many time points are needed i,e., Sampling Frequency

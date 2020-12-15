@@ -11,6 +11,7 @@ import struct
 from dialogWindows import IPAddressDialog
 from network import NetworkChecker
 from globals import *
+# import ptvsd
 
 
 # create class for horizontal line
@@ -43,8 +44,8 @@ class UDPReceiver(QtCore.QObject):
         self.start()
         print('process called')
         while self.continue_run:
-            data, addr = self.sock.recvfrom(1512)
-            receivedData = struct.unpack(f'1d {SAMPLE_ARRAY_SIZE}d', data)
+            data, addr = self.sock.recvfrom(1032)
+            receivedData = struct.unpack(f'1i {SAMPLE_ARRAY_SIZE}f', data)
             receivedPacketNumber = int (receivedData[0])
             receivedFFTArray = receivedData[1:]
             for sample in range(SAMPLE_ARRAY_SIZE):
@@ -78,11 +79,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("EDF GUI")
         self.resize(1920, 1080)
         # number of samples
-        self.numberOfSamples = 1024
+        self.numberOfSamples = NUMBER_OF_SAMPLES
         # size of data array in one udp packet
-        self.sizeOfUDPPacket = 64
+        self.sizeOfUDPPacket = SAMPLE_ARRAY_SIZE
         # value of samples for fft combined from self.sizeOfUDPPacket * self.epoches
-        self.epoches = 16
+        self.epoches = 4
         # epoch counter for updating udp data and plot data
         self.epochesCnt = 0
         # init time array
@@ -333,10 +334,10 @@ class MainWindow(QMainWindow):
         for i in range(self.sizeOfUDPPacket):
             self.sinSignal[i + self.epochesCnt * self.sizeOfUDPPacket] \
                 = udpPacketData[i] \
-                    = self.generate_sin_signals(i + self.epochesCnt * self.sizeOfUDPPacket)
-            udpPacketTime[i] = i + self.epochesCnt * self.sizeOfUDPPacket
+                    = float(self.generate_sin_signals(i + self.epochesCnt * self.sizeOfUDPPacket))
+            udpPacketTime[i] = float(i + self.epochesCnt * self.sizeOfUDPPacket)
         # send self.sizeOfUDPPacket elements to stm32
-        self.udpSendData(udpPacketTime = udpPacketTime, udpPacketData = udpPacketData)
+        self.udpSendData( udpPacketData = udpPacketData )
         # update plot data
         self.inputSignal.setData(self.time, self.sinSignal)
         # increase epoch counter
@@ -355,9 +356,9 @@ class MainWindow(QMainWindow):
     def updateDestinationAddress(self, strData):
         self.ConnectedIpAddressLabel.setText(f'<font color="black">STM32 Status: </font>{strData}')
 
-    def udpSendData(self, udpPacketTime, udpPacketData):
+    def udpSendData(self, udpPacketData):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #UDP
-        sample_struct = struct.pack('1i 64d 64d', self.epochesCnt, *udpPacketTime, *udpPacketData)
+        sample_struct = struct.pack('1i 256f', self.epochesCnt, *udpPacketData)
         sock.sendto(sample_struct, (UDP_DESTINATION_IP, UDP_SEND_PORT))
 
 

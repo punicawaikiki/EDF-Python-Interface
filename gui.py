@@ -131,7 +131,7 @@ class MainWindow(QMainWindow):
 
         # create qt send timer
         self.timer1 = QtCore.QTimer()
-        self.timer1.setInterval(1)
+        self.timer1.setInterval(20)
         self.timer1.timeout.connect(self.update_signals)
         self.timer1.start()
 

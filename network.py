@@ -4,6 +4,7 @@ from globals import *
 from PyQt5 import QtCore
 from time import sleep
 from subprocess import PIPE
+import ptvsd
 
 
 # TODO: May Check of UDP Port is possible?
@@ -22,10 +23,11 @@ class NetworkChecker(QtCore.QObject):
 
         # Building the command. Ex: "ping -c 1 google.com"
         command = ['ping', param, '1', UDP_DESTINATION_IP]
-        return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
+        return subprocess.call(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
 
     QtCore.pyqtSlot()
     def checkDestination(self):
+        ptvsd.debug_this_thread()
         while True:
             status = self.ping()
             if status is False:

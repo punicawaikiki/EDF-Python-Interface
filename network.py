@@ -3,6 +3,7 @@ import subprocess  # For executing a shell command
 from globals import *
 from PyQt5 import QtCore
 from time import sleep
+from subprocess import PIPE
 
 
 # TODO: May Check of UDP Port is possible?
@@ -21,7 +22,7 @@ class NetworkChecker(QtCore.QObject):
 
         # Building the command. Ex: "ping -c 1 google.com"
         command = ['ping', param, '1', UDP_DESTINATION_IP]
-        return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
+        return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
 
     QtCore.pyqtSlot()
     def checkDestination(self):

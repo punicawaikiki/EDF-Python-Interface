@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         # size of data array in one udp packet
         self.sizeOfUDPPacket = SAMPLE_ARRAY_SIZE
         # value of samples for fft combined from self.sizeOfUDPPacket * self.epoches
-        self.epoches = 4
+        self.epoches = EPOCHES
         # epoch counter for updating udp data and plot data
         self.epochesCnt = 0
         # init time array
@@ -131,7 +131,7 @@ class MainWindow(QMainWindow):
 
         # create qt send timer
         self.timer1 = QtCore.QTimer()
-        self.timer1.setInterval(20)
+        self.timer1.setInterval(10)
         self.timer1.timeout.connect(self.update_signals)
         self.timer1.start()
 

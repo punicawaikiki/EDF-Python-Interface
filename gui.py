@@ -223,6 +223,7 @@ class MainWindow(QMainWindow):
         # hide x and y axis
         self.inputSignalPlot.getPlotItem().hideAxis('bottom')
         self.inputSignalPlot.getPlotItem().hideAxis('left')
+        self.inputSignalPlot.setXRange(0, NUMBER_OF_SAMPLES, padding=0)
 
         # --------------- FFT Result Plot --------------------
         # Creating Plot Label for fft results

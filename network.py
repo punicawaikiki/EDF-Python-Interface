@@ -73,6 +73,7 @@ class UDPReceiver(QtCore.QObject):
                 max_index_col = np.argmax(self.fftResultsArray, axis=0)
                 self.dataChanged.emit(self.fftResultsArray)
                 self.fftpacketNumberArray = np.zeros(FFT_EPOCHES)
+
     def stop(self):
         self.continue_run = False # set the run condition to false on stop
 

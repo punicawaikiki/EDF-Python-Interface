@@ -1,11 +1,13 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 import sys
+from numpy.lib.function_base import iterable
 import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
 import numpy as np
 import socket
 import struct
+import heapq
 from network import NetworkChecker, UDPReceiver
 from globals import *
 # import ptvsd
@@ -61,6 +63,8 @@ class MainWindow(QMainWindow):
         # signal activated 
         self.signalsActivated = np.zeros(3, dtype=bool)
         self.combinedSignal = np.zeros(self.numberOfSamples, dtype=float)
+
+        self.fftHighest = np.zeros(len(self.signalFrequencies))
 
         ## fft result variables
         self.fftResultsArray = np.zeros(FFT_SIZE)
@@ -338,10 +342,8 @@ class MainWindow(QMainWindow):
     def updateFFTData(self, data):
         tpCount = self.numberOfSamples
         values = np.arange(int(tpCount/2))
-        # self.fftOutput.setData(values, data)
         self.fftOutput.setOpts(x = values, height = data)
-        max_index_col = np.argmax(data, axis=0)
-        # print('FFT Data Updated')
+        self.fftHighest = np.sort(heapq.nlargest(np.sum(self.signalsActivated), range(len(data)), key=data.__getitem__))[::-1]
 
     # set connection status
     @QtCore.pyqtSlot(str)

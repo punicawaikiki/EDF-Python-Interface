@@ -1,6 +1,7 @@
 # Earliest Deadline First (EDF) Python Interface
 
-Dieses Projekt dient als Interface für die Verbindung zu einem STM32F769I-Disc0 Board, auf welchem ein EDF Algorithmus implementiert wurde.
+This project serves as an interface to connect to a [STM32F769I-Disc0](https://www.st.com/en/evaluation-tools/32f769idiscovery.html) board on which an [EDF Scheduler](https://gitlab.fa-wi.de/punicawaikiki/edf-python-interface) has been implemented.
+The connection was made over UDP and supports a 2^11 fast fourier transform (FFT). Therefore the interface generates a signal which consists of up to 8 signals with different frequencies and amplitudes.
 
 ## Installation
 
@@ -21,3 +22,7 @@ NUMBER_OF_SAMPLES = int( SAMPLE_ARRAY_SIZE * EPOCHES ) # Number of Samples
 FFT_SIZE = int( SAMPLE_ARRAY_SIZE * EPOCHES / 2 ) # FFT Size
 FFT_EPOCHES = int(FFT_SIZE / SAMPLE_ARRAY_SIZE) # number of UDP pakets will be send back to host
 ```
+
+## Benutzung
+
+to be continued

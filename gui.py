@@ -11,27 +11,28 @@ from globals import *
 # import ptvsd
 
 
-# create class for horizontal line
+# create class for horizontal line without zoom
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
 
-
+# create class for vertikal line without zoom
 class QVLine(QFrame):
     def __init__(self):
         super(QVLine, self).__init__()
         self.setFrameShape(QFrame.VLine)
         self.setFrameShadow(QFrame.Sunken)
 
-
+# gui class
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-
+        # set window title
         self.setWindowTitle("EDF GUI")
-        self.resize(1920, 1080)
+        # set window size
+        self.resize(1820, 980)
         # number of samples
         self.numberOfSamples = NUMBER_OF_SAMPLES
         # size of data array in one udp packet
@@ -42,23 +43,23 @@ class MainWindow(QMainWindow):
         self.epochesCnt = 0
         # init time array
         self.time = np.arange(self.numberOfSamples)
-        # get local ip address
-        # TODO: check if also working on linux
+        # set local ip address
         self.sourceIpAddress = UDP_SOURCE_IP
+        # set destination ip address
         self.destinationIpAddress = UDP_DESTINATION_IP
 
-        # sin signal preferences
-        # amplitude:
+        # signal preferences
+        # amplitude: -> set all init amplitudes to 1
         self.ampl1 = 1
-        self.ampl2 = 2
-        self.ampl3 = 3
+        self.ampl2 = 1
+        self.ampl3 = 1
 
         # # signal frequencies
         self.signal1Frequency = 10
-        self.signal2Frequency = 50
-        self.signal3Frequency = 200
+        self.signal2Frequency = 20
+        self.signal3Frequency = 30
 
-        self.sinSignal = np.zeros(self.numberOfSamples)
+        self.compinedSignal = np.zeros(self.numberOfSamples)
 
         ## fft result variables
         self.fftResultsArray = np.zeros(FFT_SIZE)
@@ -88,8 +89,6 @@ class MainWindow(QMainWindow):
         self.timer1.setInterval(10)
         self.timer1.timeout.connect(self.update_signals)
         self.timer1.start()
-
-        # start pyqtsignal
 
 
     def UiComponents(self):
@@ -184,6 +183,7 @@ class MainWindow(QMainWindow):
         self.signal3AmplitudeButton.setFixedWidth(30)
         self.signal3AmplitudeButton.clicked.connect(self.signal3AmplitudeButton_clicked)
 
+        # -------------- Output Signal Plot ------------------
         # Creating Plot Label for Input Signal
         self.inputSignalLabel = QLabel("Input Signal to STM32")
         self.inputSignalLabel.setMaximumHeight(10)
@@ -192,7 +192,7 @@ class MainWindow(QMainWindow):
         # plot color
         pen = pg.mkPen(color=(105, 105, 105))
         # create input Signal for FreeRTOS
-        self.inputSignal = pg.PlotCurveItem(x = self.time, y = self.sinSignal, pen = pen)
+        self.inputSignal = pg.PlotCurveItem(x = self.time, y = self.compinedSignal, pen = pen)
         # add item to plot window
         self.inputSignalPlot.addItem(self.inputSignal)
         # set plot properties
@@ -205,6 +205,7 @@ class MainWindow(QMainWindow):
         self.inputSignalPlot.getPlotItem().hideAxis('bottom')
         self.inputSignalPlot.getPlotItem().hideAxis('left')
 
+        # --------------- FFT Result Plot --------------------
         # Creating Plot Label for fft results
         self.fftResultsLabel = QLabel("FFT Results")
         self.fftResultsLabel.setMaximumHeight(10)
@@ -217,7 +218,7 @@ class MainWindow(QMainWindow):
         # add item to plot window
         self.fftResultsPlot.addItem(self.fftOutput)
         # set plot properties
-        self.fftResultsPlot.setXRange(0, 512, padding=0)
+        self.fftResultsPlot.setXRange(0, FFT_SIZE, padding=0)
         self.fftResultsPlot.setBackground('w')
 
         # Creating a grid layout
@@ -284,16 +285,16 @@ class MainWindow(QMainWindow):
         # check if counter reached maximum of self.epoches
         if self.epochesCnt == self.epoches:
             self.epochesCnt = 0
-        # replace self.sizeOfUDPPacket elements in self.sinSignal array
+        # replace self.sizeOfUDPPacket elements in self.compinedSignal array
         for i in range(self.sizeOfUDPPacket):
-            self.sinSignal[i + self.epochesCnt * self.sizeOfUDPPacket] \
+            self.compinedSignal[i + self.epochesCnt * self.sizeOfUDPPacket] \
                 = udpPacketData[i] \
                     = float(self.generate_sin_signals(i + self.epochesCnt * self.sizeOfUDPPacket))
             udpPacketTime[i] = float(i + self.epochesCnt * self.sizeOfUDPPacket)
         # send self.sizeOfUDPPacket elements to stm32
         self.udpSendData( udpPacketData = udpPacketData )
         # update plot data
-        self.inputSignal.setData(self.time, self.sinSignal)
+        self.inputSignal.setData(self.time, self.compinedSignal)
         # increase epoch counter
         self.epochesCnt += 1
 

@@ -5,14 +5,13 @@ The connection was made over UDP and supports a 2^11 (2048) fast fourier transfo
 
 ![Demo Interface](http://gitlab.fa-wi.de/punicawaikiki/edf-python-interface/-/raw/master/pictures/demo.png)
 
-
 ## Installation
 
 * If you only want to use the interface with no custom modifications, you need to download the gui.exe file and execute it (only for windows machines).
 * When you want to modify this project by yourself, you need to clone this repository and activate the python virtual environment ([venv](https://docs.python.org/3/library/venv.html)). The advantage of this use is the independence of the platform is used, like windows, linux or mac.
 ## Preferences
 
-In der Datei globals.py befinden sich alle nötigen Verbindungseinstellungen, diese sehen wie folgt aus:
+In the file globals.py you will find all necessary connection settings, the look like this:
 
 ```python
 UDP_DESTINATION_IP = "192.168.1.5"  # destination ip address(stm32)

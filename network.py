@@ -70,7 +70,6 @@ class UDPReceiver(QtCore.QObject):
                     break
             self.fftpacketNumberArray[receivedPacketNumber] = 1
             if (np.count_nonzero(self.fftpacketNumberArray) == FFT_EPOCHES):
-                max_index_col = np.argmax(self.fftResultsArray, axis=0)
                 self.dataChanged.emit(self.fftResultsArray)
                 self.fftpacketNumberArray = np.zeros(FFT_EPOCHES)
 

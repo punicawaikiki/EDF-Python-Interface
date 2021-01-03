@@ -420,9 +420,12 @@ class MainWindow(QMainWindow):
         # setting this layout to the widget
         self.widget.setLayout(self.layout)
 
+        # create highest frequencies found
+        self.fftFrequenciesResults = QLabel("")
+
         # -------------------- widget positions -------------------
         # vertical and horizontal lines for limitations
-        self.layout.addWidget(QVLine(), 1, 1, 45, 1)
+        self.layout.addWidget(QVLine(), 1, 1, 46, 1)
         self.layout.addWidget(QHLine(), 1, 1, 1, 48)
         self.layout.addWidget(QHLine(), 3, 1, 1, 5)
         self.layout.addWidget(QHLine(), 8, 2, 1, 4)
@@ -432,10 +435,10 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(QHLine(), 28, 2, 1, 4)
         self.layout.addWidget(QHLine(), 33, 2, 1, 4)
         self.layout.addWidget(QHLine(), 38, 2, 1, 4)
-        self.layout.addWidget(QVLine(), 1, 6, 45, 1)
+        self.layout.addWidget(QVLine(), 1, 6, 46, 1)
         self.layout.addWidget(QHLine(), 23, 6, 1, 41)
-        self.layout.addWidget(QHLine(), 46, 1, 1, 48)
-        self.layout.addWidget(QVLine(), 1, 50, 45, 1)
+        self.layout.addWidget(QHLine(), 47, 1, 1, 48)
+        self.layout.addWidget(QVLine(), 1, 50, 46, 1)
         # connection status widget
         self.layout.addWidget(self.ConnectedIpAddressLabel, 2, 2, 1, 4)
         # signal 1 preferences
@@ -545,6 +548,10 @@ class MainWindow(QMainWindow):
         # fft result plot
         self.layout.addWidget(self.fftResultsLabel, 24, 7, 1, 42)
         self.layout.addWidget(self.fftResultsPlot, 25, 7, 20, 42)
+
+        # detected frequency results
+        self.layout.addWidget(self.fftFrequenciesResults, 46, 24, 1, 25) 
+
         # setting this widget as central widget of the main window
         self.setCentralWidget(self.widget)
 
@@ -579,10 +586,14 @@ class MainWindow(QMainWindow):
     # update fft result
     @QtCore.pyqtSlot(np.ndarray)
     def updateFFTData(self, data):
+        stringBuffer = '<font color="black">Calculated Frequencies: </font>'
         tpCount = self.numberOfSamples
         values = np.arange(int(tpCount/2))
         self.fftOutput.setOpts(x = values, height = data)
-        self.fftHighest = np.sort(heapq.nlargest(np.sum(self.signalsActivated), range(len(data)), key=data.__getitem__))[::-1]
+        self.fftHighest = np.sort(heapq.nlargest(np.sum(self.signalsActivated), range(len(data)), key=data.__getitem__))
+        for frequence in self.fftHighest:
+            stringBuffer = stringBuffer + f'</font><font color="blue">{frequence}Hz              </font>'
+        self.fftFrequenciesResults.setText(stringBuffer)
 
     # set connection status
     @QtCore.pyqtSlot(str)

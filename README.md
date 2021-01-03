@@ -3,7 +3,7 @@
 This project serves as an interface to connect to a [STM32F769I-Disc0](https://www.st.com/en/evaluation-tools/32f769idiscovery.html) board on which an [EDF Scheduler](https://gitlab.fa-wi.de/punicawaikiki/edf-python-interface) has been implemented.
 The connection was made over UDP and supports a 2^11 (2048) fast fourier transform (FFT). Therefore the interface generates a signal which consists of up to 8 signals with different frequencies and amplitudes. The interface shows the generated signal as well as the result of the fft ot the STM32-board.
 
-![Demo Interface](https://gitlab.fa-wi.de/punicawaikiki/edf-python-interface/blob/master/pictures/demo.jpg?raw=true)
+![Demo Interface](https://gitlab.fa-wi.de/punicawaikiki/edf-python-interface/blob/master/pictures/demo.png)
 
 
 ## Installation

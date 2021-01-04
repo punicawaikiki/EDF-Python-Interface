@@ -9,7 +9,7 @@ The connection was made over UDP and supports a 2^11 (2048) fast fourier transfo
 
 * If you only want to use the interface with no custom modifications, you need to download the gui.exe file and execute it (only for windows machines).
 * When you want to modify this project by yourself, you need to clone this repository and activate the python virtual environment ([venv](https://docs.python.org/3/library/venv.html)). The advantage of this use is the independence of the platform is used, like windows, linux or mac.
-## Preferences
+## Properties
 
 In the file globals.py you will find all necessary connection settings, the look like this:
 
@@ -28,8 +28,8 @@ FFT_EPOCHES = int(FFT_SIZE / SAMPLE_ARRAY_SIZE) # number of UDP pakets will be s
 ## Usage
 
 In the left upper corner is a status indicator, which tells you the connection state to the STM32 board.
-Below the status indicator, there are 8 Signals with predefined signal preferences and all deactivated on startup. Here you can activate and/or modify every signal.
-In the upper half of the whole gui there will be displayed the resulting signal of all user choosen signal preferences.
+Below the status indicator, there are 8 Signals with predefined signal properties and all deactivated on startup. Here you can activate and/or modify every signal.
+In the upper half of the whole gui there will be displayed the resulting signal of all user choosen signal properties.
 In the lower half of the interface there will be the result of the FFT-Calculation displayed.
 
 ## Contribution

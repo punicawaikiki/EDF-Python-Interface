@@ -2,3 +2,4 @@ numpy==1.19.3
 PyQt5
 pyqtgraph
 matplotlib
+ptvsd

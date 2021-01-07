@@ -381,7 +381,7 @@ class MainWindow(QMainWindow):
         self.inputSignalLabel = QLabel("Input Signal to STM32")
         self.inputSignalLabel.setMaximumHeight(10)
         # creating a plot window for input Signals
-        self.inputSignalPlot = pg.plot()
+        self.inputSignalPlot = pg.PlotWidget()
         # plot color
         pen = pg.mkPen(color=(105, 105, 105))
         # create input Signal for FreeRTOS
@@ -404,7 +404,7 @@ class MainWindow(QMainWindow):
         self.fftResultsLabel = QLabel("FFT Result")
         self.fftResultsLabel.setMaximumHeight(10)
         # creating a plot window for fft
-        self.fftResultsPlot = pg.plot()
+        self.fftResultsPlot = pg.PlotWidget()
         # plot color
         pen = pg.mkPen(color=(0, 0, 0))
         # create fft Output signals

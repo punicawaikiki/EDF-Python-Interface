@@ -7,7 +7,7 @@ The connection was made over UDP and supports a 2^11 (2048) fast fourier transfo
 
 ## Installation
 
-* If you only want to use the interface with no custom modifications, you need to download the gui.exe file and execute it (only for windows machines).
+* If you only want to use the interface with no custom modifications, you need to download the "dist" folder and execute "gui.exe" (only for windows machines).
 * When you want to modify this project by yourself, you need to clone this repository and activate the python virtual environment ([venv](https://docs.python.org/3/library/venv.html)). The advantage of this use is the independence of the platform is used, like windows, linux or mac.
 ## Properties
 

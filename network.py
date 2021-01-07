@@ -4,7 +4,7 @@ from globals import *
 from PyQt5 import QtCore
 from time import sleep
 from subprocess import PIPE
-import ptvsd
+# import ptvsd
 import numpy as np
 import socket
 import struct
@@ -30,7 +30,7 @@ class NetworkChecker(QtCore.QObject):
 
     QtCore.pyqtSlot()
     def checkDestination(self):
-        ptvsd.debug_this_thread()
+        # ptvsd.debug_this_thread()
         while True:
             status = self.ping()
             if status is False:

@@ -379,7 +379,7 @@ class MainWindow(QMainWindow):
         # -------------- Output Signal Plot ------------------
         # Creating Plot Label for Input Signal
         self.inputSignalLabel = QLabel("Input Signal to STM32")
-        self.inputSignalLabel.setMaximumHeight(10)
+        self.inputSignalLabel.setMaximumHeight(15)
         # creating a plot window for input Signals
         self.inputSignalPlot = pg.PlotWidget()
         # plot color
@@ -402,7 +402,7 @@ class MainWindow(QMainWindow):
         # --------------- FFT Result Plot --------------------
         # Creating Plot Label for fft results
         self.fftResultsLabel = QLabel("FFT Result")
-        self.fftResultsLabel.setMaximumHeight(10)
+        self.fftResultsLabel.setMaximumHeight(15)
         # creating a plot window for fft
         self.fftResultsPlot = pg.PlotWidget()
         # plot color
@@ -425,7 +425,7 @@ class MainWindow(QMainWindow):
 
         # -------------------- widget positions -------------------
         # vertical and horizontal lines for limitations
-        self.layout.addWidget(QVLine(), 1, 1, 46, 1)
+        self.layout.addWidget(QVLine(), 1, 1, 45, 1)
         self.layout.addWidget(QHLine(), 1, 1, 1, 48)
         self.layout.addWidget(QHLine(), 3, 1, 1, 5)
         self.layout.addWidget(QHLine(), 8, 2, 1, 4)
@@ -435,10 +435,10 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(QHLine(), 28, 2, 1, 4)
         self.layout.addWidget(QHLine(), 33, 2, 1, 4)
         self.layout.addWidget(QHLine(), 38, 2, 1, 4)
-        self.layout.addWidget(QVLine(), 1, 6, 46, 1)
-        self.layout.addWidget(QHLine(), 23, 6, 1, 41)
-        self.layout.addWidget(QHLine(), 47, 1, 1, 48)
-        self.layout.addWidget(QVLine(), 1, 50, 46, 1)
+        self.layout.addWidget(QVLine(), 1, 6, 44, 1)
+        self.layout.addWidget(QHLine(), 23, 6, 1, 43)
+        self.layout.addWidget(QHLine(), 45, 1, 1, 48)
+        self.layout.addWidget(QVLine(), 1, 50, 44, 1)
         # connection status widget
         self.layout.addWidget(self.ConnectedIpAddressLabel, 2, 2, 1, 4)
         # signal 1 preferences
